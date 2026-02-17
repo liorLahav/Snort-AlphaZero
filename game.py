@@ -1,16 +1,27 @@
 import random
-
 import numpy as np
+from dataclasses import make_dataclass
+
 
 class SNORT:
     class Move:
-        def __init__(self, x, y):
+        def __init__(
+                self,
+                x: int,
+                y: int,
+                is_swap: bool = False,
+        ):
             self.x = x
             self.y = y
+            self.is_swap = is_swap
 
-        # Added repr for easier debugging
-        def __repr__(self):
+        def __repr__(
+                self,
+        ):
+            if self.is_swap:
+                return f"Move(SWAP@{self.y},{self.x})"
             return f"Move({self.y}, {self.x})"
+
     # Constants
     CAT = 1
     CAT_AREA = 3
@@ -20,54 +31,133 @@ class SNORT:
     BLOCK = 6
     EMPTY = 0
 
-    BOARD_SIZE=6
+    BOARD_SIZE = 6
 
     CAT_WIN = 1
-    DOG_WIN = 2
+    DOG_WIN = -1
     DRAW = 0
     ONGOING = 3
 
-    def __init__(self):
+    def __init__(
+            self,
+    ):
         self.board = [[0 for _ in range(self.BOARD_SIZE)] for _ in range(self.BOARD_SIZE)]
         self.player = self.CAT
         self.game_state = self.ONGOING
+        self.last_move = None
 
-        # Place 5 random blocks
-        for i in range(3):
+        self.game_counter = 0
+
+        self.swapped = False
+
+        self.first_move = None
+
+        for _ in range(3):
             while True:
-                x = random.randint(0, self.BOARD_SIZE -1)
+                x = random.randint(0, self.BOARD_SIZE - 1)
                 y = random.randint(0, self.BOARD_SIZE - 1)
                 if self.board[y][x] == self.BLOCK:
                     continue
                 self.board[y][x] = self.BLOCK
                 break
 
-    def legal_moves(self):
+    def legal_moves(
+            self,
+    ):
         area = self.get_area_type()
-        return [
+        moves = [
             SNORT.Move(x, y)
             for y in range(self.BOARD_SIZE)
             for x in range(self.BOARD_SIZE)
             if self.board[y][x] == self.EMPTY or self.board[y][x] == area
         ]
 
-    def get_area_type(self):
+        if (
+                self.game_counter == 1
+                and not self.swapped
+                and self.first_move is not None
+        ):
+            fm = self.first_move
+            moves.append(SNORT.Move(fm.x, fm.y, is_swap=True))
+
+        return moves
+
+    def get_area_type(
+            self,
+    ):
         if self.player == self.CAT:
             return self.CAT_AREA
-        elif self.player == self.DOG:
+        if self.player == self.DOG:
             return self.DOG_AREA
         return 0
 
-    def make(self, move: "SNORT.Move"):
+    def _swap_board(
+            self,
+            undo,
+    ):
+        for y in range(self.BOARD_SIZE):
+            for x in range(self.BOARD_SIZE):
+                v = self.board[y][x]
+                undo["cell_changes"].append((y, x, v))
+
+                if v == self.CAT:
+                    self.board[y][x] = self.DOG
+                elif v == self.DOG:
+                    self.board[y][x] = self.CAT
+                elif v == self.CAT_AREA:
+                    self.board[y][x] = self.DOG_AREA
+                elif v == self.DOG_AREA:
+                    self.board[y][x] = self.CAT_AREA
+
+    def make(
+            self,
+            move: "SNORT.Move",
+    ):
         undo = {
             "prev_player": self.player,
             "prev_game_state": self.game_state,
-            "cell_changes": []
+            "prev_last_move": self.last_move,
+            "prev_game_counter": self.game_counter,
+            "prev_swapped": self.swapped,
+            "prev_first_move": self.first_move,
+            "cell_changes": [],
         }
 
+        self.last_move = move
+
+        # ---- SWAP action (Pie rule) implemented as replaying the first cell ----
+        if (
+                self.game_counter == 1
+                and self.first_move is not None
+                and move.x == self.first_move.x
+                and move.y == self.first_move.y
+                and getattr(move, "is_swap", False)
+        ):
+            self._swap_board(undo)
+
+            self.swapped = True
+            self.game_counter += 1
+
+            # turn moves on after swap
+            mover = self.player
+            self.player = self.other(self.player)
+
+            if not self.legal_moves():
+                self.game_state = mover
+            else:
+                self.game_state = self.ONGOING
+
+            return undo
+
+        # Normal placement
         y0, x0 = move.y, move.x
+
         undo["cell_changes"].append((y0, x0, self.board[y0][x0]))
         self.board[y0][x0] = self.player
+
+        # record the very first placement
+        if self.game_counter == 0:
+            self.first_move = SNORT.Move(x0, y0)
 
         cur_area = self.get_area_type()
         dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
@@ -79,152 +169,127 @@ class SNORT:
 
             v = self.board[y][x]
 
-            # Skip blocks or actual pieces
             if v == self.BLOCK or v == self.CAT or v == self.DOG:
                 continue
 
-            # --- LOGIC FIX START ---
             new_val = v
-
-            # If empty, it takes on the current player's influence
             if v == self.EMPTY:
                 new_val = cur_area
-
-            # If it's the opponent's area, it becomes common (dead zone)
-            # If it's already my area or common area, it doesn't change
             elif v != cur_area and v != self.COMMON_AREA:
                 new_val = self.COMMON_AREA
 
             if new_val != v:
                 undo["cell_changes"].append((y, x, v))
                 self.board[y][x] = new_val
-            # --- LOGIC FIX END ---
 
         mover = self.player
         self.player = self.other(self.player)
+        self.game_counter += 1
 
-        # Terminal check
         if not self.legal_moves():
-
             self.game_state = mover
         else:
             self.game_state = self.ONGOING
+
         return undo
 
-    def unmake(self, undo):
-        for y, x, old in reversed(undo["cell_changes"]):
-            self.board[y][x] = old
-        self.player = undo["prev_player"]
-        self.game_state = undo["prev_game_state"]
-
-    import numpy as np
-
-    def encode(self) -> np.ndarray:
-        """
-        Fully-decodable (invertible) encoding for SNORT.
-
-        Planes (C=9), each is N x N:
-          0: EMPTY
-          1: CAT
-          2: DOG
-          3: CAT_AREA
-          4: DOG_AREA
-          5: COMMON_AREA
-          6: BLOCK
-          7: game_state (constant plane)
-          8: turn (constant plane: 1.0 if CAT to move else 0.0)
-
-        Returns: np.ndarray shape (9, N, N) float32
-        """
+    def encode(
+            self,
+            include_swap_plane: bool = True,
+    ) -> np.ndarray:
         N = self.BOARD_SIZE
         b = np.array(self.board, dtype=np.int8)
 
+        me = self.player
+        opp = self.other(me)
+
+        p_my_pieces = (b == me).astype(np.float32)
+        p_opp_pieces = (b == opp).astype(np.float32)
+        p_blocks = (b == self.BLOCK).astype(np.float32)
+
+        my_area_val = self.CAT_AREA if me == self.CAT else self.DOG_AREA
+        opp_area_val = self.DOG_AREA if me == self.CAT else self.CAT_AREA
+
+        p_valid_me = ((b == self.EMPTY) | (b == my_area_val)).astype(np.float32)
+        p_valid_opp = ((b == self.EMPTY) | (b == opp_area_val)).astype(np.float32)
+
+        # During ply==1, the first occupied cell becomes a legal "swap move" for current player,
+        # so we also mark it as valid in the mask plane.
+        if (
+                self.game_counter == 1
+                and not self.swapped
+                and self.first_move is not None
+        ):
+            p_valid_me[self.first_move.y, self.first_move.x] = 1.0
+
+        p_last_move = np.zeros((N, N), dtype=np.float32)
+        if self.last_move is not None and not getattr(self.last_move, "is_swap", False):
+            if 0 <= self.last_move.y < N and 0 <= self.last_move.x < N:
+                p_last_move[self.last_move.y, self.last_move.x] = 1.0
+
         planes = [
-            (b == self.EMPTY).astype(np.float32),
-            (b == self.CAT).astype(np.float32),
-            (b == self.DOG).astype(np.float32),
-            (b == self.CAT_AREA).astype(np.float32),
-            (b == self.DOG_AREA).astype(np.float32),
-            (b == self.COMMON_AREA).astype(np.float32),
-            (b == self.BLOCK).astype(np.float32),
-            np.full((N, N), float(self.game_state), dtype=np.float32),
-            np.full((N, N), 1.0 if self.player == self.CAT else 0.0, dtype=np.float32),
+            p_my_pieces,
+            p_opp_pieces,
+            p_blocks,
+            p_valid_me,
+            p_valid_opp,
+            p_last_move,
         ]
 
-        return np.stack(planes, axis=0)
+        return np.stack(planes, axis=-1)
 
-    def decode(self, X: np.ndarray) -> None:
-        """
-        Decodes the encoding produced by encode() back into:
-          - self.board (including areas)
-          - self.game_state
-          - self.player
-        """
-        N = self.BOARD_SIZE
-
-        if not isinstance(X, np.ndarray):
-            raise TypeError("X must be a numpy ndarray")
-        if X.shape != (9, N, N):
-            raise ValueError(f"Bad shape: got {X.shape}, expected {(9, N, N)}")
-
-        board_planes = X[0:7]  # (7, N, N)
-        board = [[self.EMPTY for _ in range(N)] for _ in range(N)]
-
-        idx_to_val = [
-            self.EMPTY,
-            self.CAT,
-            self.DOG,
-            self.CAT_AREA,
-            self.DOG_AREA,
-            self.COMMON_AREA,
-            self.BLOCK,
-        ]
-
-        for y in range(N):
-            for x in range(N):
-                k = int(np.argmax(board_planes[:, y, x]))
-                board[y][x] = idx_to_val[k]
-
-        # game_state and player are stored as constants; read one cell
-        self.game_state = int(round(float(X[7, 0, 0])))
-        self.player = self.CAT if float(X[8, 0, 0]) >= 0.5 else self.DOG
-
-        self.board = board
-
-    def in_board(self, y, x):
+    def in_board(
+            self,
+            y: int,
+            x: int,
+    ):
         return 0 <= x < self.BOARD_SIZE and 0 <= y < self.BOARD_SIZE
 
-    def other(self, player: int) -> int:
+    def other(
+            self,
+            player: int,
+    ) -> int:
         return self.DOG if player == self.CAT else self.CAT
 
-    def clone(self):
+    def clone(
+            self,
+    ):
         s = SNORT()
         s.player = self.player
         s.game_state = self.game_state
         s.board = [row[:] for row in self.board]
+        s.last_move = self.last_move
+        s.game_counter = self.game_counter
+        s.swapped = self.swapped
+        s.first_move = self.first_move
         return s
 
-    # Optimized to avoid cloning
-    def winning_move(self, move: "SNORT.Move") -> bool:
-        undo = self.make(move)
-        is_win = (self.game_state != self.ONGOING)  # If game ended, current mover (prev_player) won
-        self.unmake(undo)
-        return is_win
-
-    def __str__(self):
-        # (Same as your original code)
+    def __str__(
+            self,
+    ):
         def cell_to_char(v: int) -> str:
-            if v == self.EMPTY: return "."
-            if v == self.CAT: return "C"
-            if v == self.DOG: return "D"
-            if v == self.BLOCK: return "#"
-            if v == self.CAT_AREA: return "c"  # Lowercase for area
-            if v == self.DOG_AREA: return "d"  # Lowercase for area
-            if v == self.COMMON_AREA: return "*"
+            if v == self.EMPTY:
+                return "."
+            if v == self.CAT:
+                return "C"
+            if v == self.DOG:
+                return "D"
+            if v == self.BLOCK:
+                return "#"
+            if v == self.CAT_AREA:
+                return "c"
+            if v == self.DOG_AREA:
+                return "d"
+            if v == self.COMMON_AREA:
+                return "*"
             return "?"
 
         turn = "CAT" if self.player == self.CAT else "DOG"
-        lines = [f"Turn: {turn}", "   " + " ".join(f"{x:2d}" for x in range(self.BOARD_SIZE)), "   " + "---" * self.BOARD_SIZE]
+        lines = [
+            f"Turn: {turn}",
+            "   " + " ".join(f"{x:2d}" for x in range(self.BOARD_SIZE)),
+            "   " + "---" * self.BOARD_SIZE,
+        ]
         for y in range(self.BOARD_SIZE):
             row = " ".join(f" {cell_to_char(self.board[y][x])}" for x in range(self.BOARD_SIZE))
             lines.append(f"{y:2d}|{row}")
