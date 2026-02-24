@@ -1,20 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="6e805692-5490-4647-b25f-1c7fbebc9b71" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/AlphaZero_Player/GameNetwork.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AlphaZero_Player/alphazero_node.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AlphaZero_Player/alphazero_player.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AlphaZero_Player/nn1.keras" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Elo.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/final_nn.keras" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/nn.keras" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="6e805692-5490-4647-b25f-1c7fbebc9b71" name="Changes" comment="Implement the RL strategy">
+      <change afterPath="$PROJECT_DIR$/nn_game_1000.keras" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nn_game_200.keras" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nn_game_250.keras" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nn_game_300.keras" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nn_game_350.keras" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nn_game_400.keras" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nn_game_500.keras" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nn_game_650.keras" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nn_game_750.keras" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nn_game_800.keras" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nnn.keras" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game.py" beforeDir="false" afterPath="$PROJECT_DIR$/game.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AlphaZero_Player/GameNetwork.py" beforeDir="false" afterPath="$PROJECT_DIR$/AlphaZero_Player/GameNetwork.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AlphaZero_Player/alphazero_node.py" beforeDir="false" afterPath="$PROJECT_DIR$/AlphaZero_Player/alphazero_node.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AlphaZero_Player/alphazero_player.py" beforeDir="false" afterPath="$PROJECT_DIR$/AlphaZero_Player/alphazero_player.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MCTS_Player/mcts_player.py" beforeDir="false" afterPath="$PROJECT_DIR$/MCTS_Player/mcts_player.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mcts_node.py" beforeDir="false" afterPath="$PROJECT_DIR$/MCTS_Player/mcts_node.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mcts_player.py" beforeDir="false" afterPath="$PROJECT_DIR$/MCTS_Player/mcts_player.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,6 +35,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;liorLahav&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/liorLahav/Snort-AlphaZero.git&quot;,
+    &quot;accountId&quot;: &quot;7823e403-c3f9-4b6b-a5d6-4c61f89c847e&quot;
+  }
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 7
 }</component>
@@ -182,6 +198,15 @@
       <option name="presentableId" value="Default" />
       <updated>1767773196622</updated>
     </task>
+    <task id="LOCAL‎-00001" summary="Implement the RL strategy">
+      <option name="closed" value="true" />
+      <created>1771286999254</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL‎-00001" />
+      <option name="project" value="LOCAL‎" />
+      <updated>1771286999254</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -194,5 +219,9 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Implement the RL strategy" />
+    <option name="LAST_COMMIT_MESSAGE" value="Implement the RL strategy" />
   </component>
 </project>

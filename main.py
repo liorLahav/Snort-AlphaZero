@@ -1,9 +1,13 @@
-import numpy as np
 import sys
-import os
 from MCTS_Player.mcts_player import MCTSPlayer
 from game import SNORT
 from tensorflow.keras.models import load_model
+import os
+import glob
+import re
+import pickle
+import numpy as np
+import tensorflow as tf
 
 from AlphaZero_Player.alphazero_player import AlphaZeroPlayer
 
@@ -41,7 +45,7 @@ def winner_to_z(winner: int, player_to_move: int, draw_code: int) -> float:
         return -1.0
 
 
-def log_mcts_step_and_apply_move(game, mcts, iterations=2000) -> dict:
+def log_mcts_step_and_apply_move(game, mcts, iterations=1000) -> dict:
     move = mcts.choose_move(game, iterations=iterations)
 
     if mcts.root_node is None:
@@ -80,7 +84,7 @@ def log_alphazero_step_and_apply_move(game, alphazero, iterations=300) -> dict:
     return step
 
 
-def play_selfplay_episode(mcts, iterations=2000):
+def play_selfplay_episode(mcts, iterations=800):
     game = SNORT()
     episode = []
 
@@ -222,12 +226,10 @@ def get_human_move(game):
 def play_vs_ai():
     print("=== SNORT: Human vs MCTS ===")
 
-    # 1. Setup
     game = SNORT()
-    ai = AlphaZeroPlayer(load_model('final_nn.keras'))
+    ai = AlphaZeroPlayer(load_model('nn_game_1000.keras'))
     ai2 =  MCTSPlayer()
 
-    # 2. Choose Side
     while True:
         choice = input("Do you want to play as Cat (starts) or Dog (goes second)? [c/d]: ").lower()
         if choice in ['c']:
@@ -241,22 +243,19 @@ def play_vs_ai():
             print("\nYou are DOG (Player 2). AI starts.")
             break
 
-    # 3. Game Loop
     while game.game_state == SNORT.ONGOING:
         print("\n" + "=" * 20)
-        print(game)  # Uses your __str__ method
+        print(game)
         print("=" * 20)
 
         if game.player == human_player:
-            # Human Turn
-            #move = get_human_move(game)
-            move = ai2.choose_move(game,1000000)
+            move = ai2.choose_move(game,20000)
             game.make(move)
         else:
             # AI Turn
             print(f"\nAI ({'Cat' if ai_player == SNORT.CAT else 'Dog'}) is thinking...")
             print("5")
-            move = ai.choose_move(game, iterations=300)
+            move = ai.choose_move(game, iterations=400)
 
             print(f"AI chose: Row {move.y}, Col {move.x}")
             game.make(move)
@@ -275,42 +274,88 @@ def play_vs_ai():
         print("AI WON!")
 
 
+
+
 def train_on_episodes(
-        model_path: str = "./nn.keras",
+        model,
         num_games: int = 1000,
         iterations: int = 300,
-        buffer_size: int = 512,
-        batch_size: int = 64,
-        save_every: int = 500,
-        save_dir: str = "./checkpoints"
+        # --- TUNED HYPERPARAMETERS ---
+        buffer_size: int = 10000,
+        batch_size: int = 128,
+        # -----------------------------
+        save_every: int = 100,
+        save_dir: str = "./checkpoints88"
 ):
     os.makedirs(save_dir, exist_ok=True)
+
+    # --- 1. HPC RESUME LOGIC ---
+    start_game = 1
+    replay_buffer = []
+
+    # Find all checkpoint files like "nn_game_100.keras"
+    checkpoints = glob.glob(os.path.join(save_dir, "nn_game_*.keras"))
+
+    if checkpoints:
+        # Sort by game number to find the latest2
+        # Extracts '100' from '.../nn_game_100.keras'
+        latest_ckpt = max(checkpoints, key=lambda f: int(re.search(r'nn_game_(\d+)', f).group(1)))
+
+        # Parse the game number
+        last_game_num = int(re.search(r'nn_game_(\d+)', latest_ckpt).group(1))
+
+        print(f"[HPC RESUME] Found checkpoint: {latest_ckpt}")
+        print(f"[HPC RESUME] Loading model...")
+        model = tf.keras.models.load_model(latest_ckpt)
+
+        # Attempt to load the replay buffer so we don't start with empty memory
+        buffer_path = os.path.join(save_dir, f"buffer_game_{last_game_num}.pkl")
+        if os.path.exists(buffer_path):
+            print(f"[HPC RESUME] Loading replay buffer from {buffer_path}...")
+            with open(buffer_path, 'rb') as f:
+                replay_buffer = pickle.load(f)
+        else:
+            print("[WARNING] No saved buffer found. Starting with empty buffer (Model might be unstable initially).")
+
+        # Update start index
+        start_game = last_game_num + 1
+        print(f"[HPC RESUME] Resuming loop from Game {start_game}")
+
+    else:
+        print("[INIT] No checkpoints found. Starting from scratch.")
+        # Only load if model passed as string path (initial load)
+        if isinstance(model, str):
+            model = tf.keras.models.load_model(model)
+
+    # ---------------------------
 
     cat_wins = 0
     dog_wins = 0
     draws = 0
+    # replay_buffer is already initialized above (either empty or loaded)
 
-    if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Model not found at {model_path}.")
-
-    print(f"Loading model from {model_path}...")
-    model = load_model(model_path)
-    replay_buffer = []
-
-    winner_names = {
-        SNORT.CAT: "Cat",
-        SNORT.DOG: "Dog",
-        SNORT.DRAW: "Draw"
-    }
-
+    winner_names = {SNORT.CAT: "Cat", SNORT.DOG: "Dog", SNORT.DRAW: "Draw"}
     last_loss = None
 
-    for i in range(1, num_games + 1):
+    print(f"Starting training with Batch Size: {batch_size} | Buffer Size: {buffer_size}")
+
+    # Updated Loop Range to use start_game
+    for i in range(start_game, num_games + 1):
         player = AlphaZeroPlayer(model)
 
+        # 1. Self-Play
         episode, winner = play_selfplay_episode(player, iterations=iterations)
 
-        replay_buffer.extend(episode)
+        # 2. Data Augmentation
+        new_samples = []
+        for sample in episode:
+            state, policy, value = sample['X'], sample['pi'], sample['z']
+            variations = augment_data(state, policy)
+            for (aug_board, aug_pi) in variations:
+                new_samples.append({'X': aug_board, 'pi': aug_pi, 'z': value})
+
+        # Add to buffer & Trim
+        replay_buffer.extend(new_samples)
         if len(replay_buffer) > buffer_size:
             replay_buffer = replay_buffer[-buffer_size:]
 
@@ -318,47 +363,77 @@ def train_on_episodes(
             cat_wins += 1
         elif winner == SNORT.DOG:
             dog_wins += 1
-        elif winner == SNORT.DRAW:
+        else:
             draws += 1
 
-        # Train if possible
+        # 3. Training
         if len(replay_buffer) >= batch_size:
-            batch = np.random.choice(len(replay_buffer), batch_size, replace=False)
-            X = np.array([replay_buffer[j]['X'] for j in batch])
-            PI = np.array([replay_buffer[j]['pi'] for j in batch])
-            Z = np.array([replay_buffer[j]['z'] for j in batch])
+            indices = np.random.choice(len(replay_buffer), batch_size, replace=False)
+            batch_X = np.array([replay_buffer[j]['X'] for j in indices])
+            batch_PI = np.array([replay_buffer[j]['pi'] for j in indices])
+            batch_Z = np.array([replay_buffer[j]['z'] for j in indices])
 
-            loss = model.train_on_batch(
-                x=X,
-                y={'policy': PI, 'value': Z}
-            )
-            last_loss = loss[0]
+            loss = model.train_on_batch(x=batch_X, y={'policy': batch_PI, 'value': batch_Z})
+            last_loss = loss[0] if isinstance(loss, list) else loss
 
-        # Save checkpoint every N games
+        # 4. Checkpointing (Model AND Buffer)
         if i % save_every == 0:
+            # Save Model
             save_path = os.path.join(save_dir, f"nn_game_{i}.keras")
             model.save(save_path)
-            print(f"[Checkpoint saved] {save_path}")
 
-        print(
-            f"Game {i}/{num_games} | "
-            f"Winner: {winner_names.get(winner, 'Unknown')} | "
-            f"CAT: {cat_wins} | "
-            f"DOG: {dog_wins} | "
-            f"DRAW: {draws} | "
-            f"Loss: {last_loss:.4f}" if last_loss is not None else
-            f"Game {i}/{num_games} | "
-            f"Winner: {winner_names.get(winner, 'Unknown')} | "
-            f"CAT: {cat_wins} | "
-            f"DOG: {dog_wins} | "
-            f"DRAW: {draws} | "
-            f"Loss: N/A"
-        )
+            buffer_path = os.path.join(save_dir, f"buffer_game_{i}.pkl")
+            with open(buffer_path, 'wb') as f:
+                pickle.dump(replay_buffer, f)
 
-    # Final save
+            print(f"[Checkpoint] Saved Model & Buffer to {save_dir} (Game {i})")
+
+        loss_str = f"{last_loss:.4f}" if last_loss is not None else "Waiting..."
+        print(f"Game {i}/{num_games} | Winner: {winner_names.get(winner, '?')} | "
+              f"W/L/D: {cat_wins}/{dog_wins}/{draws} | "
+              f"Buffer: {len(replay_buffer)} | Loss: {loss_str}")
+
     final_path = os.path.join(save_dir, "nn_final.keras")
     model.save(final_path)
-    print(f"Training complete. Final model saved to {final_path}")
+    print(f"Training Complete. Saved to {final_path}")
+
+def augment_data(board, pi):
+    augmented_data = []
+
+    # Board shape is (Height, Width, Channels) or just (H, W)
+    h, w = board.shape[:2]
+
+
+    flattened_size = h * w
+    has_pass = (len(pi) == flattened_size + 1)
+
+    if has_pass:
+        pi_board = pi[:-1].reshape(h, w)
+        pass_prob = pi[-1]
+    else:
+        pi_board = pi.reshape(h, w)
+
+    for k in range(4):
+        # Rotate board and policy k*90 degrees
+        rot_board = np.rot90(board, k)
+        rot_pi = np.rot90(pi_board, k)
+
+        # --- Add Rotation ---
+        flat_pi = rot_pi.flatten()
+        if has_pass:
+            flat_pi = np.append(flat_pi, pass_prob)
+        augmented_data.append((rot_board, flat_pi))
+
+        # --- Add Flip (Transpose) of this rotation ---
+        flip_board = np.fliplr(rot_board)
+        flip_pi = np.fliplr(rot_pi)
+
+        flat_flip_pi = flip_pi.flatten()
+        if has_pass:
+            flat_flip_pi = np.append(flat_flip_pi, pass_prob)
+        augmented_data.append((flip_board, flat_flip_pi))
+
+    return augmented_data
 
 
 if __name__ == "__main__":

@@ -1,11 +1,20 @@
 import numpy as np
 from AlphaZero_Player.alphazero_node import AlphaZeroNode
+import tensorflow as tf
 
 class AlphaZeroPlayer():
     def __init__(self,nn):
         self.root_player = 0
         self.root_node = None
         self.nn = nn
+
+        # בניית פונקציית חיזוי מהירה שמקמפלת את המודל לגרף סטטי
+        @tf.function
+        def fast_predict(x):
+            return self.nn(x, training=False)
+
+        self.fast_predict = fast_predict
+
     def choose_move(self, game_state, iterations=200):
         self.root_player = game_state.player
         self.root_node = AlphaZeroNode(game_state, root_player=self.root_player)
@@ -43,7 +52,8 @@ class AlphaZeroPlayer():
         encoded = node.state.encode()
         board_batch = np.expand_dims(encoded, axis=0)
 
-        policy_logits, value_batch = self.nn.predict(board_batch, verbose=0)
+        board_tensor = tf.convert_to_tensor(board_batch, dtype=tf.float32)
+        policy_logits, value_batch = self.fast_predict(board_tensor)
 
         raw_policy = policy_logits[0]
         value = value_batch[0][0]

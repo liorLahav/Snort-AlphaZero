@@ -15,7 +15,7 @@ class AlphaZeroNode:
         self.n = 0
         self.children: List[AlphaZeroNode] = []
 
-    def child_uct_score(self, child,c= 1.0):
+    def child_uct_score(self, child,c= 1):
         if self.state.player == self.root_player:
             exploitation = child.q
         else:
