@@ -64,26 +64,6 @@ def log_mcts_step_and_apply_move(game, mcts, iterations=1000) -> dict:
     game.make(move)
     return step
 
-def log_alphazero_step_and_apply_move(game, alphazero, iterations=300) -> dict:
-    move = alphazero.choose_move(game, iterations=iterations)
-
-    if alphazero.root_node is None:
-        raise RuntimeError("mcts.root_node was not set. choose_move() must set it.")
-
-    X = game.encode()
-    visits = extract_root_N(game, alphazero.root_node)
-    pi = visits_to_pi(visits)
-
-    step = {
-        "X": X,
-        "pi": pi,
-        "player_to_move": int(game.player),
-    }
-
-    game.make(move)
-    return step
-
-
 def play_selfplay_episode(mcts, iterations=800):
     game = SNORT()
     episode = []
@@ -191,8 +171,6 @@ def get_human_move(game):
     """
     legal_moves = game.legal_moves()
 
-    # Create a simpler representation for matching input
-    # legal_moves contains Move(x, y) objects
     legal_coords = {(m.y, m.x) for m in legal_moves}
 
     while True:
@@ -227,8 +205,8 @@ def play_vs_ai():
     print("=== SNORT: Human vs MCTS ===")
 
     game = SNORT()
-    ai = AlphaZeroPlayer(load_model('nn_game_1000.keras'))
-    ai2 =  MCTSPlayer()
+    ai = AlphaZeroPlayer(load_model('hu_nn_1000_g.keras'))
+    ai2 =  AlphaZeroPlayer(load_model('init_hu_nn.keras.keras'))
 
     while True:
         choice = input("Do you want to play as Cat (starts) or Dog (goes second)? [c/d]: ").lower()
@@ -249,7 +227,8 @@ def play_vs_ai():
         print("=" * 20)
 
         if game.player == human_player:
-            move = ai2.choose_move(game,20000)
+            move = get_human_move(game)
+            #move = ai2.choose_move(game,400)
             game.make(move)
         else:
             # AI Turn
@@ -273,17 +252,12 @@ def play_vs_ai():
     else:
         print("AI WON!")
 
-
-
-
 def train_on_episodes(
         model,
         num_games: int = 1000,
         iterations: int = 300,
-        # --- TUNED HYPERPARAMETERS ---
         buffer_size: int = 10000,
         batch_size: int = 128,
-        # -----------------------------
         save_every: int = 100,
         save_dir: str = "./checkpoints88"
 ):
@@ -293,11 +267,9 @@ def train_on_episodes(
     start_game = 1
     replay_buffer = []
 
-    # Find all checkpoint files like "nn_game_100.keras"
     checkpoints = glob.glob(os.path.join(save_dir, "nn_game_*.keras"))
 
     if checkpoints:
-        # Sort by game number to find the latest2
         # Extracts '100' from '.../nn_game_100.keras'
         latest_ckpt = max(checkpoints, key=lambda f: int(re.search(r'nn_game_(\d+)', f).group(1)))
 
@@ -327,19 +299,16 @@ def train_on_episodes(
         if isinstance(model, str):
             model = tf.keras.models.load_model(model)
 
-    # ---------------------------
 
     cat_wins = 0
     dog_wins = 0
     draws = 0
-    # replay_buffer is already initialized above (either empty or loaded)
 
     winner_names = {SNORT.CAT: "Cat", SNORT.DOG: "Dog", SNORT.DRAW: "Draw"}
     last_loss = None
 
     print(f"Starting training with Batch Size: {batch_size} | Buffer Size: {buffer_size}")
 
-    # Updated Loop Range to use start_game
     for i in range(start_game, num_games + 1):
         player = AlphaZeroPlayer(model)
 
@@ -354,7 +323,6 @@ def train_on_episodes(
             for (aug_board, aug_pi) in variations:
                 new_samples.append({'X': aug_board, 'pi': aug_pi, 'z': value})
 
-        # Add to buffer & Trim
         replay_buffer.extend(new_samples)
         if len(replay_buffer) > buffer_size:
             replay_buffer = replay_buffer[-buffer_size:]
@@ -378,7 +346,6 @@ def train_on_episodes(
 
         # 4. Checkpointing (Model AND Buffer)
         if i % save_every == 0:
-            # Save Model
             save_path = os.path.join(save_dir, f"nn_game_{i}.keras")
             model.save(save_path)
 
@@ -418,13 +385,11 @@ def augment_data(board, pi):
         rot_board = np.rot90(board, k)
         rot_pi = np.rot90(pi_board, k)
 
-        # --- Add Rotation ---
         flat_pi = rot_pi.flatten()
         if has_pass:
             flat_pi = np.append(flat_pi, pass_prob)
         augmented_data.append((rot_board, flat_pi))
 
-        # --- Add Flip (Transpose) of this rotation ---
         flip_board = np.fliplr(rot_board)
         flip_pi = np.fliplr(rot_pi)
 

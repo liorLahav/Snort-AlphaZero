@@ -57,37 +57,18 @@ class MCTSPlayer:
 
     def simulation(self, node):
         cur = node.state.clone()
-
         while cur.game_state == cur.ONGOING:
             moves = cur.legal_moves()
-
-            # אם יש מעט מהלכים, נבדוק את כולם. אם יש הרבה, נבדוק מדגם.
             sampled_moves = random.sample(moves, min(len(moves), 5))
-
-            # בחירת המהלך שמשאיר ליריב הכי פחות אופציות
             best_move = max(sampled_moves, key=lambda m: self.evaluate_snort_move(cur, m))
-
             cur.make(best_move)
-
         return 1 if cur.game_state == self.root_player else -1
 
     def evaluate_snort_move(self, state, move):
         temp_state = state.clone()
         temp_state.make(move)
-
-        # 1. How many moves does the opponent have right now?
-        opponent_moves = len(temp_state.legal_moves())
-
-        # 2. How many moves do YOU have waiting for your next turn?
-        # (You will need to implement a way to check your own moves.
-        # e.g., temp_state.get_moves_for_player(self.root_player))
-        my_future_moves = len(temp_state.legal_moves())
-
-        # 3. Add the MCTS noise tie-breaker
-        noise = random.uniform(0, 0.1)
-
-        # 4. Maximize the gap between your options and their options
-        return (my_future_moves - opponent_moves) + noise
+        opponent_moves_count = len(temp_state.legal_moves())
+        return 100 - opponent_moves_count
 
     def backpropagation(self, node: MCTSNode, r):
         while node is not None:
@@ -105,24 +86,9 @@ class MCTSPlayer:
         for child in sorted_children:
             move = getattr(child, 'action', '?')
 
-            # q is already the average value
             avg_val = child.q
-            win_pct = (avg_val + 1) * 50  # Convert [-1,1] to [0,100]
+            win_pct = (avg_val + 1) * 50
 
             print(f"{str(move):<4} | {child.n:<10} | {avg_val:>11.4f} | {win_pct:>6.1f}%")
             print("-" * 50)
 
-    def get_neighbors(self, pos):
-        # במקום r, c = pos
-        # אנחנו ניגשים לערכים מתוך אובייקט ה-Move
-        r = pos.y  # או pos.row, תלוי איך הגדרת את ה-class Move
-        c = pos.x  # או pos.col
-
-        neighbors = []
-        # כאן נשאר אותו דבר, רק שים לב שהגודל (6) מתאים ללוח שלך
-        board_size = 6
-        if r > 0: neighbors.append((r - 1, c))
-        if r < board_size - 1: neighbors.append((r + 1, c))
-        if c > 0: neighbors.append((r, c - 1))
-        if c < board_size - 1: neighbors.append((r, c + 1))
-        return neighbors

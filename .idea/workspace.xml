@@ -1,24 +1,78 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="6e805692-5490-4647-b25f-1c7fbebc9b71" name="Changes" comment="Implement the RL strategy">
-      <change afterPath="$PROJECT_DIR$/nn_game_1000.keras" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/nn_game_200.keras" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/nn_game_250.keras" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/nn_game_300.keras" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/nn_game_350.keras" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/nn_game_400.keras" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/nn_game_500.keras" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/nn_game_650.keras" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/nn_game_750.keras" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/nn_game_800.keras" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/nnn.keras" afterDir="false" />
+    <list default="true" id="6e805692-5490-4647-b25f-1c7fbebc9b71" name="Changes" comment="Fined tuned the alpha zero nn">
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job10_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job11_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job12_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job13_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job14_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job15_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job16_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job17_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job18_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job19_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job1_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job20_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job21_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job22_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job23_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job24_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job25_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job26_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job27_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job28_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job29_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job2_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job30_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job31_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job32_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job33_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job34_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job35_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job36_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job37_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job38_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job39_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job3_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job40_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job41_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job42_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job43_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job44_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job45_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job46_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job47_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job48_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job49_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job4_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job50_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job5_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job6_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job7_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job8_00000.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hu_data/snort_shard_job9_00000.npz" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/AlphaZero_Player/GameNetwork.py" beforeDir="false" afterPath="$PROJECT_DIR$/AlphaZero_Player/GameNetwork.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AlphaZero_Player/alphazero_node.py" beforeDir="false" afterPath="$PROJECT_DIR$/AlphaZero_Player/alphazero_node.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/AlphaZero_Player/alphazero_player.py" beforeDir="false" afterPath="$PROJECT_DIR$/AlphaZero_Player/alphazero_player.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AlphaZero_Player/nn1.keras" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Elo.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/MCTS_Player/mcts_player.py" beforeDir="false" afterPath="$PROJECT_DIR$/MCTS_Player/mcts_player.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/final_nn.keras" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/game.py" beforeDir="false" afterPath="$PROJECT_DIR$/game.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/nn.keras" beforeDir="false" afterPath="$PROJECT_DIR$/init_rr_nn.keras" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/nn_game_1000.keras" beforeDir="false" afterPath="$PROJECT_DIR$/hu_nn_1000_g.keras" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/nn_game_200.keras" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/nn_game_250.keras" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/nn_game_300.keras" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/nn_game_350.keras" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/nn_game_400.keras" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/nn_game_500.keras" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/nn_game_650.keras" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/nn_game_750.keras" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/nn_game_800.keras" beforeDir="false" afterPath="$PROJECT_DIR$/rr_nn_1700_g.keras" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/nnn.keras" beforeDir="false" afterPath="$PROJECT_DIR$/init_hu_nn.keras" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -206,7 +260,15 @@
       <option name="project" value="LOCAL‎" />
       <updated>1771286999254</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL‎-00002" summary="Fined tuned the alpha zero nn">
+      <option name="closed" value="true" />
+      <created>1771970942394</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL‎-00002" />
+      <option name="project" value="LOCAL‎" />
+      <updated>1771970942394</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -222,6 +284,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Implement the RL strategy" />
-    <option name="LAST_COMMIT_MESSAGE" value="Implement the RL strategy" />
+    <MESSAGE value="Fined tuned the alpha zero nn" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fined tuned the alpha zero nn" />
   </component>
 </project>

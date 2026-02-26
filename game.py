@@ -51,7 +51,6 @@ class SNORT:
         self.swapped = False
 
         self.first_move = None
-
         for _ in range(3):
             while True:
                 x = random.randint(0, self.BOARD_SIZE - 1)
@@ -125,7 +124,6 @@ class SNORT:
 
         self.last_move = move
 
-        # ---- SWAP action (Pie rule) implemented as replaying the first cell ----
         if (
                 self.game_counter == 1
                 and self.first_move is not None
@@ -138,7 +136,6 @@ class SNORT:
             self.swapped = True
             self.game_counter += 1
 
-            # turn moves on after swap
             mover = self.player
             self.player = self.other(self.player)
 
@@ -149,7 +146,6 @@ class SNORT:
 
             return undo
 
-        # Normal placement
         y0, x0 = move.y, move.x
 
         undo["cell_changes"].append((y0, x0, self.board[y0][x0]))
@@ -195,7 +191,6 @@ class SNORT:
 
     def encode(
             self,
-            include_swap_plane: bool = True,
     ) -> np.ndarray:
         N = self.BOARD_SIZE
         b = np.array(self.board, dtype=np.int8)

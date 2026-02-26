@@ -8,7 +8,6 @@ class AlphaZeroPlayer():
         self.root_node = None
         self.nn = nn
 
-        # בניית פונקציית חיזוי מהירה שמקמפלת את המודל לגרף סטטי
         @tf.function
         def fast_predict(x):
             return self.nn(x, training=False)

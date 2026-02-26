@@ -43,8 +43,6 @@ class GameNetwork:
         # We wrap it in 'Model' so it behaves just like your 'Sequential' variable
         t = Model(inputs=t_in, outputs=t_out, name="t")
 
-        # --- 3. Your Original Syntax Flow ---
-
         inp = Input(shape=(6, 6, 6), name="board")
         x = t(inp)
 
@@ -122,8 +120,8 @@ class GameNetwork:
             pi_rot = np.rot90(pi_sq, k=k, axes=(1, 2))
 
             X_aug_list.append(x_rot)
-            PI_aug_list.append(pi_rot.reshape(-1, 36))  # החזרה לוקטור שטוח
-            Z_aug_list.append(Z_all)  # ה-Label (ניצחון/הפסד) לא משתנה בסיבוב
+            PI_aug_list.append(pi_rot.reshape(-1, 36))
+            Z_aug_list.append(Z_all)
 
             x_flip = np.flip(x_rot, axis=2)
             pi_flip = np.flip(pi_rot, axis=2)
@@ -171,10 +169,9 @@ class GameNetwork:
         )
         return history
     def save_model(self):
-        self.nn.save("nn.keras")
+        self.nn.save("init_rr_nn.keras")
 
 if __name__ == "__main__":
     game = GameNetwork()
     history = game.train_model()
-    print(history.history.keys())
     game.save_model()
